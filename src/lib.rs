@@ -53,7 +53,7 @@ pub enum Organization {
         sid: String,
         url: Box<Url>,
         rank: OrganizationRank,
-        member_count: usize,
+        member_count: u64,
     },
     Redacted,
 }

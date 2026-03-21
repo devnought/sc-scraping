@@ -1,4 +1,4 @@
-use log::error;
+use log::{error, warn};
 use scraper::{ElementRef, Selector};
 use url::Url;
 
@@ -10,7 +10,7 @@ struct OrgData {
     title: String,
     rank: u8,
     url: Url,
-    member_count: usize,
+    member_count: u64,
 }
 
 pub(crate) fn parse_org<'a>(
@@ -146,18 +146,16 @@ fn parse_info<'a>(element: &ElementRef) -> Result<OrgData, ScScrapingError<'a>> 
             ScScrapingError::organization(message)
         })?
         .inner_html()
-        .split(" members")
-        .collect::<Vec<&str>>()
-        .first()
+        .split(' ')
+        .next()
         .ok_or_else(|| {
             let message = "Could not split out member count";
             error!("{message}");
             ScScrapingError::organization(message)
         })?
-        .parse::<usize>()
-        .ok()
-        .ok_or_else(|| {
-            let message = "Could not parse member count";
+        .parse()
+        .map_err(|e| {
+            let message = format!("Could not parse organiztion member count: {e}");
             error!("{message}");
             ScScrapingError::organization(message)
         })?;
