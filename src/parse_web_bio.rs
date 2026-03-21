@@ -40,6 +40,6 @@ fn parse_bio(element: &ElementRef) -> Vec<String> {
         .filter_map(|e| e.value().as_text())
         .map(|t| t.trim())
         .filter(|t| !t.is_empty())
-        .map(|t| t.to_string())
+        .map(std::string::ToString::to_string)
         .collect::<Vec<_>>()
 }

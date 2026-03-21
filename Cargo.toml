@@ -1,7 +1,7 @@
 [package]
 name = "sc-scraping"
-version = "0.1.0"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 description = "Utility functions and structures to scrape data from the Roberts Space Industries website"
 homepage = "https://github.com/devnought/sc-scraping"
 keywords = ["star", "citizen", "rsi"]
@@ -12,8 +12,8 @@ repository = "https://github.com/devnought/sc-scraping"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = "0.4.17"
-scraper = "0.13.0"
-serde = { version = "1.0.142 ", features = ["derive"] }
-chrono = { version = "0.4.22", features = ["serde"] }
-url = { version = "2.2.2", features = ["serde"] }
+log = "0.4.29"
+scraper = "0.26.0"
+serde = { version = "1.0.228 ", features = ["derive"] }
+url = { version = "2.5.8", features = ["serde"] }
+jiff = { version = "0.2.23", features = ["serde"] }

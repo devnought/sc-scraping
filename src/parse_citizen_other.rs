@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeZone, Utc};
+use jiff::civil::Date;
 use log::error;
 use scraper::{ElementRef, Selector};
 
@@ -11,7 +11,7 @@ enum OtherValue {
 }
 
 pub(crate) struct OtherData {
-    pub enlisted: DateTime<Utc>,
+    pub enlisted: Date,
     pub location: Vec<String>,
     pub languages: Vec<String>,
 }
@@ -110,20 +110,18 @@ fn parse_data<'a>(element: &ElementRef) -> Result<OtherData, ScScrapingError<'a>
         }
     }
 
-    let enlisted_value = enlisted.map(|e| format!("{e} 00:00:00")).ok_or_else(|| {
+    let Some(enlisted_value) = enlisted else {
         let message = "Enlisted date not found";
+        error!("{message}");
+        return Err(ScScrapingError::citizen(message));
+    };
+
+    let enlisted_parsed = Date::strptime("%b %d, %Y", &enlisted_value).map_err(|e| {
+        let message = format!("Error parsing the date `{enlisted_value}`: {e}");
+
         error!("{message}");
         ScScrapingError::citizen(message)
     })?;
-
-    let enlisted_parsed = Utc
-        .datetime_from_str(&enlisted_value, "%b %e, %Y %T")
-        .map_err(|e| {
-            let message = format!("Error parsing the date `{}`: {}", &enlisted_value, e);
-
-            error!("{message}");
-            ScScrapingError::citizen(message)
-        })?;
 
     let data = OtherData {
         enlisted: enlisted_parsed,
@@ -140,12 +138,11 @@ pub(crate) fn parse_citizen_record_id(element: &ElementRef) -> Option<u64> {
     element
         .select(&selector)
         .map(|r| r.inner_html())
-        .filter_map(|id| {
+        .find_map(|id| {
             if let Some(stripped) = id.strip_prefix('#') {
                 stripped.parse().ok()
             } else {
                 id.parse().ok()
             }
         })
-        .next()
 }
