@@ -2,7 +2,7 @@ use log::error;
 use scraper::{ElementRef, Selector};
 use url::Url;
 
-use crate::{error::ScScrapingError, Title};
+use crate::{Title, error::ScScrapingError};
 
 pub(crate) struct ProfileInfo {
     pub avatar: Url,
@@ -40,8 +40,7 @@ fn parse_avatar<'a>(element: &ElementRef) -> Result<Url, ScScrapingError<'a>> {
         .select(&selector)
         .filter_map(|img| img.value().attr("src"))
         .map(|src| format!("https://robertsspaceindustries.com{src}"))
-        .filter_map(|addr| Url::parse(&addr).ok())
-        .next()
+        .find_map(|addr| Url::parse(&addr).ok())
         .ok_or_else(|| {
             let message = "Could not parse avatar URL";
             error!("{message}");
@@ -89,8 +88,8 @@ fn parse_data<'a>(element: &ElementRef) -> Result<(String, String, Title), ScScr
 
     let title_icon = elements[2]
         .select(&icon_selector)
-        .flat_map(|i| i.value().attr("src"))
-        .flat_map(|src| {
+        .filter_map(|i| i.value().attr("src"))
+        .find_map(|src| {
             if src.starts_with("https://") {
                 Url::parse(src).ok()
             } else if src.starts_with('/') {
@@ -100,7 +99,6 @@ fn parse_data<'a>(element: &ElementRef) -> Result<(String, String, Title), ScScr
                 None
             }
         })
-        .next()
         .ok_or_else(|| {
             let message = "Title icon could not be parsed";
             error!("{message}");

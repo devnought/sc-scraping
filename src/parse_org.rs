@@ -2,7 +2,7 @@ use log::{error, warn};
 use scraper::{ElementRef, Selector};
 use url::Url;
 
-use crate::{error::ScScrapingError, Organization, OrganizationRank, OrganizationType};
+use crate::{Organization, OrganizationRank, OrganizationType, error::ScScrapingError};
 
 struct OrgData {
     name: String,
@@ -56,8 +56,7 @@ fn parse_logo<'a>(element: &ElementRef) -> Result<Url, ScScrapingError<'a>> {
         .select(&selector)
         .filter_map(|i| i.value().attr("src"))
         .map(|src| format!("https://robertsspaceindustries.com{src}"))
-        .filter_map(|src| Url::parse(&src).ok())
-        .next()
+        .find_map(|src| Url::parse(&src).ok())
         .ok_or_else(|| {
             let message = "Could not find organization logo";
             error!("{message}");
@@ -70,7 +69,7 @@ fn parse_info<'a>(element: &ElementRef) -> Result<OrgData, ScScrapingError<'a>> 
     let rank_selector = Selector::parse("div.info > div.ranking > span.active").unwrap();
     let member_count_selector = Selector::parse("div.thumb > span.members").unwrap();
 
-    let rank = element.select(&rank_selector).count() as u8;
+    let rank = u8::try_from(element.select(&rank_selector).count()).unwrap();
 
     let elements = element.select(&info_selector).collect::<Vec<_>>();
 
@@ -162,9 +161,9 @@ fn parse_info<'a>(element: &ElementRef) -> Result<OrgData, ScScrapingError<'a>> 
 
     let data = OrgData {
         name,
-        rank,
         sid,
         title,
+        rank,
         url,
         member_count,
     };

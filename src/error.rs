@@ -28,12 +28,11 @@ impl<'a> ScScrapingError<'a> {
     }
 }
 
-impl<'a> Error for ScScrapingError<'a> {}
-impl<'a> Display for ScScrapingError<'a> {
+impl Error for ScScrapingError<'_> {}
+impl Display for ScScrapingError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Citizen { message } => write!(f, "{message}"),
-            Self::Organization { message } => write!(f, "{message}"),
+            Self::Citizen { message } | Self::Organization { message } => write!(f, "{message}"),
         }
     }
 }

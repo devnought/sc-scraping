@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
+use jiff::civil::Date;
 use log::error;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
@@ -10,13 +10,16 @@ mod error;
 mod parse_citizen_other;
 mod parse_citizen_profile;
 mod parse_org;
+use parse_org::parse_org;
 mod parse_web_bio;
+use parse_web_bio::parse_web_bio;
 
 pub use error::*;
-use parse_citizen_other::*;
-use parse_citizen_profile::*;
-use parse_org::*;
-use parse_web_bio::*;
+
+use crate::{
+    parse_citizen_other::{parse_citizen_record_id, parse_other},
+    parse_citizen_profile::parse_profile_info,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,7 +27,7 @@ pub struct Citizen {
     pub moniker: String,
     pub handle: String,
     pub title: Title,
-    pub enlisted: DateTime<Utc>,
+    pub enlisted: Date,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub citizen_record_number: Option<u64>,
     pub avatar: Url,
@@ -134,14 +137,13 @@ pub fn parse_organizations<'a>(
         return Ok(None);
     }
 
-    if map.contains_key(&OrganizationType::Main) {
-        if let Some(main) = map.get(&OrganizationType::Main) {
-            if main.len() > 1 {
-                let message = "Cannot have multiple main organizations";
-                error!("{message}");
-                return Err(ScScrapingError::organization(message));
-            }
-        }
+    if map.contains_key(&OrganizationType::Main)
+        && let Some(main) = map.get(&OrganizationType::Main)
+        && main.len() > 1
+    {
+        let message = "Cannot have multiple main organizations";
+        error!("{message}");
+        return Err(ScScrapingError::organization(message));
     }
 
     let orgs = Organizations {
@@ -153,4 +155,23 @@ pub fn parse_organizations<'a>(
     };
 
     Ok(Some(orgs))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let test_profile_data = include_str!("./test-profile.html");
+        let test_org_data = include_str!("./test-orgs.html");
+
+        let citizen = parse_citizen_record(test_profile_data).unwrap();
+        let orgs = parse_organizations(test_org_data).unwrap();
+
+        // TODO: make this test not suck
+
+        println!("{citizen:#?}");
+        println!("{orgs:#?}");
+    }
 }
