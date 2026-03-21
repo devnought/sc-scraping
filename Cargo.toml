@@ -12,8 +12,8 @@ repository = "https://github.com/devnought/sc-scraping"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = "0.4.29"
+jiff = { version = "0.2.23", features = ["serde"] }
 scraper = "0.26.0"
 serde = { version = "1.0.228 ", features = ["derive"] }
+tracing = "0.1.44"
 url = { version = "2.5.8", features = ["serde"] }
-jiff = { version = "0.2.23", features = ["serde"] }

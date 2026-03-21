@@ -1,5 +1,5 @@
-use log::error;
 use scraper::{ElementRef, Selector};
+use tracing::error;
 
 use crate::error::ScScrapingError;
 

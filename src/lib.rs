@@ -1,24 +1,24 @@
 use std::collections::HashMap;
 
 use jiff::civil::Date;
-use log::error;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 use url::Url;
 
 mod error;
 mod parse_citizen_other;
 mod parse_citizen_profile;
 mod parse_org;
-use parse_org::parse_org;
 mod parse_web_bio;
-use parse_web_bio::parse_web_bio;
 
 pub use error::*;
 
 use crate::{
-    parse_citizen_other::{parse_citizen_record_id, parse_other},
+    parse_citizen_other::{parse_citizen_probation, parse_citizen_record_id, parse_other},
     parse_citizen_profile::parse_profile_info,
+    parse_org::parse_org,
+    parse_web_bio::parse_web_bio,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,6 +39,8 @@ pub struct Citizen {
     pub website: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bio: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub probation: Option<Date>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -83,7 +85,7 @@ pub(crate) enum OrganizationType {
 pub fn parse_citizen_record<'a>(html_data: &str) -> Result<Citizen, ScScrapingError<'a>> {
     let html = Html::parse_document(html_data);
 
-    let citizen_selector = Selector::parse("div.profile-content").unwrap();
+    let citizen_selector = Selector::parse("div.public-profile").unwrap();
     let citizen = html.select(&citizen_selector).next().ok_or_else(|| {
         let message = "Citizen content is empty";
         error!("{message}");
@@ -108,6 +110,8 @@ pub fn parse_citizen_record<'a>(html_data: &str) -> Result<Citizen, ScScrapingEr
         fluency: other_data.languages,
 
         citizen_record_number: parse_citizen_record_id(&citizen),
+
+        probation: parse_citizen_probation(&citizen),
     };
 
     Ok(record)
@@ -162,8 +166,8 @@ mod tests {
 
     #[test]
     fn test() {
-        let test_profile_data = include_str!("./test-profile.html");
-        let test_org_data = include_str!("./test-orgs.html");
+        let test_profile_data = include_str!("./test-data/test-profile-probation.html");
+        let test_org_data = include_str!("./test-data/test-orgs.html");
 
         let citizen = parse_citizen_record(test_profile_data).unwrap();
         let orgs = parse_organizations(test_org_data).unwrap();

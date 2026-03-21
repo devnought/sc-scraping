@@ -1,6 +1,6 @@
 use jiff::civil::Date;
-use log::error;
 use scraper::{ElementRef, Selector};
+use tracing::{error, warn};
 
 use crate::error::ScScrapingError;
 
@@ -140,9 +140,28 @@ pub(crate) fn parse_citizen_record_id(element: &ElementRef) -> Option<u64> {
         .map(|r| r.inner_html())
         .find_map(|id| {
             if let Some(stripped) = id.strip_prefix('#') {
-                stripped.parse().ok()
+                stripped
+                    .parse()
+                    .inspect_err(|e| warn!("Could not parse citizen record id: {e}"))
+                    .ok()
             } else {
-                id.parse().ok()
+                id.parse()
+                    .inspect_err(|e| warn!("Could not parse citizen record id: {e}"))
+                    .ok()
             }
+        })
+}
+
+pub(crate) fn parse_citizen_probation(element: &ElementRef) -> Option<Date> {
+    let selector = Selector::parse("div.error-message.probation > strong > span").unwrap();
+
+    element
+        .select(&selector)
+        .map(|r| r.inner_html())
+        .find_map(|error| {
+            error
+                .parse()
+                .inspect_err(|e| warn!("Could not parse probation date: {e}"))
+                .ok()
         })
 }
