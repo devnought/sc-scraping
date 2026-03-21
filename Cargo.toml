@@ -1,6 +1,6 @@
 [package]
 name = "sc-scraping"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "Utility functions and structures to scrape data from the Roberts Space Industries website"
 homepage = "https://github.com/devnought/sc-scraping"

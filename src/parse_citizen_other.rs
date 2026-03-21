@@ -1,4 +1,4 @@
-use jiff::civil::Date;
+use jiff::civil::{Date, DateTime};
 use scraper::{ElementRef, Selector};
 use tracing::{error, warn};
 
@@ -152,7 +152,7 @@ pub(crate) fn parse_citizen_record_id(element: &ElementRef) -> Option<u64> {
         })
 }
 
-pub(crate) fn parse_citizen_probation(element: &ElementRef) -> Option<Date> {
+pub(crate) fn parse_citizen_probation(element: &ElementRef) -> Option<DateTime> {
     let selector = Selector::parse("div.error-message.probation > strong > span").unwrap();
 
     element

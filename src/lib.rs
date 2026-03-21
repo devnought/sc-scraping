@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jiff::civil::Date;
+use jiff::civil::{Date, DateTime};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use tracing::error;
@@ -40,7 +40,7 @@ pub struct Citizen {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bio: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub probation: Option<Date>,
+    pub probation: Option<DateTime>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
