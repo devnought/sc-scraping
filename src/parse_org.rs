@@ -10,6 +10,7 @@ struct OrgData {
     title: String,
     rank: u8,
     url: Url,
+    member_count: u64,
 }
 
 pub(crate) fn parse_org<'a>(
@@ -39,6 +40,7 @@ pub(crate) fn parse_org<'a>(
             },
             sid: info.sid,
             url: Box::new(info.url),
+            member_count: info.member_count,
         }
     } else {
         Organization::Redacted
@@ -65,6 +67,7 @@ fn parse_logo<'a>(element: &ElementRef) -> Result<Url, ScScrapingError<'a>> {
 fn parse_info<'a>(element: &ElementRef) -> Result<OrgData, ScScrapingError<'a>> {
     let info_selector = Selector::parse("div.info > p").unwrap();
     let rank_selector = Selector::parse("div.info > div.ranking > span.active").unwrap();
+    let member_count_selector = Selector::parse("div.thumb > span.members").unwrap();
 
     let rank = u8::try_from(element.select(&rank_selector).count()).unwrap();
 
@@ -133,12 +136,36 @@ fn parse_info<'a>(element: &ElementRef) -> Result<OrgData, ScScrapingError<'a>> 
             ScScrapingError::organization(message)
         })?;
 
+    let member_count = element
+        .select(&member_count_selector)
+        .next()
+        .ok_or_else(|| {
+            let message = "Could not find member count";
+            error!("{message}");
+            ScScrapingError::organization(message)
+        })?
+        .inner_html()
+        .split(' ')
+        .next()
+        .ok_or_else(|| {
+            let message = "Could not split out member count";
+            error!("{message}");
+            ScScrapingError::organization(message)
+        })?
+        .parse()
+        .map_err(|e| {
+            let message = format!("Could not parse organiztion member count: {e}");
+            error!("{message}");
+            ScScrapingError::organization(message)
+        })?;
+
     let data = OrgData {
         name,
         sid,
         title,
         rank,
         url,
+        member_count,
     };
 
     Ok(data)
