@@ -1,4 +1,4 @@
-use log::{error, warn};
+use log::error;
 use scraper::{ElementRef, Selector};
 use url::Url;
 
