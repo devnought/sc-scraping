@@ -125,8 +125,6 @@ fn parse_data<'a>(element: &ElementRef) -> Result<OtherData, ScScrapingError<'a>
             ScScrapingError::citizen(message)
         })?;
 
-    println!("{enlisted_parsed}");
-
     let data = OtherData {
         enlisted: enlisted_parsed,
         location,
